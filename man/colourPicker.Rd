@@ -4,7 +4,7 @@
 \alias{colourPicker}
 \title{Colour picker gadget}
 \usage{
-colourPicker(numCols = 1)
+colourPicker(numCols = 3)
 }
 \arguments{
 \item{numCols}{The number of colours to select when the gadget launches (you
@@ -18,13 +18,13 @@ This gadget lets you choose colours easily. You can select multiple colours,
 and you can either choose any RGB colour, or browse through R colours.
 }
 \note{
-This gadget returns a vector of colours that can be assigned to a variable.
-If instead you want to get a text representation of the colours that can
-embedded into code, use the addin from the RStudio Addins menu.
+This gadget returns a vector of colours that can be assigned to
+a variable. If instead you want to get a text representation of the colours
+that can embedded into code, use the addin from the RStudio Addins menu.
 }
 \examples{
 if (interactive()) {
-  cols <- colourPicker(3)
+  cols <- colourPicker(5)
 }
 }
 

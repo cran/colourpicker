@@ -1,37 +1,116 @@
-#' Colour picker gadget
+#' Plot colour helper
 #'
-#' This gadget lets you choose colours easily. You can select multiple colours,
-#' and you can either choose any RGB colour, or browse through R colours.
+#' Allows you to interactively pick combinations of colours, to help you
+#' choose colours to use in your plots. The plot updates in real-time as you
+#' pick colours.\cr\cr
+#' If you often find yourself spending a lot of time re-creating
+#' the same plot over and over with different colours to try to find the best
+#' colours, then the Plot Colour Helper can help you immensely.\cr\cr
+#' \strong{Important:} The colours you pick will be available as a variable
+#' called \code{CPCOLS}, so you can use \code{CPCOLS} in your plot code. See the
+#' example below.
 #'
-#' @param numCols The number of colours to select when the gadget launches (you
-#' can add and remove more colours from the app itself too)
-#' @note This gadget returns a vector of colours that can be assigned to
-#' a variable. If instead you want to get a text representation of the colours
-#' that can embedded into code, use the addin from the RStudio Addins menu.
-#' @return Vector of selected colours
+#' There are many keyboard shortcuts to help you be more efficient. For example,
+#' pressing \emph{spacebar} adds a new colour, \emph{left}/\emph{right} keys
+#' let you navigate between the selected colours, \emph{1-9} let you select any
+#' of the first 9 colours. For a full list of keyboard shortcuts, click on
+#' \emph{Show keyboard shortcuts}.
+#' @import shiny
+#' @import miniUI
+#' @param code Code for a plot. You can use the variable \code{CPCOLS} in this
+#' code to refer to the colours that you will pick. If you do not provide any
+#' code, the plot helper will initialize with sample code. The code can be
+#' provided as text or as R code.
+#' @param colours A vector of colours to use as the initial colours in the tool.
+#' If you provide an integer instead of a vector of colours, the tool will load
+#' with that number of colours, and default colours will be used initially.
+#' If you do not provide this parameter, the tool will attempt to guess how many
+#' colours are needed in the \code{code} and initialize that many colours.
+#' @param returnCode If \code{TRUE}, return the plot code and the \code{CPCOLS}
+#' variable as text. If \code{FALSE} (default), return the vector of selected
+#' colours.
+#' @return When this function is called using \code{plotHelper()}, the chosen
+#' colours are returned as a vector of colours. When this is run as an RStudio
+#' addin (through the \emph{Addins} menu), the resulting code that includes the
+#' colour vector gets inserted into the R document. As a side effect,
+#' \code{CPCOLS} gets assigned in the global environment to the value of the
+#' selected colours.
 #' @export
 #' @examples
 #' if (interactive()) {
-#'   cols <- colourPicker(5)
+#'   cols <- plotHelper()
+#'   cols <- plotHelper(colours = c("red", "blue"))
+#'   cols <- plotHelper(colours = 5)
+#'
+#'   library(ggplot2)
+#'   cols <- plotHelper(ggplot(mtcars, aes(mpg,wt)) +
+#'                      geom_point(aes(col = as.factor(cyl)))+
+#'                      scale_colour_manual(values = CPCOLS))
 #' }
-colourPicker <- function(numCols = 3) {
-  colourPickerGadget(numCols)
-}
-
-colourPickerAddin <- function() {
-  col <- colourPickerGadget()
-  text <- paste0("c(\"", paste(col, collapse = "\", \""), "\")")
-  rstudioapi::insertText(text = text)
-}
-
-
-#' @import shiny
-#' @import miniUI
-colourPickerGadget <- function(numCols = 3) {
+plotHelper <- function(code, colours, returnCode = FALSE) {
   if (!requireNamespace("rstudioapi", quietly = TRUE)) {
-    stop("You must have RStudio v0.99.878 or newer to use the colour picker",
+    stop("You must have RStudio v0.99.878 or newer to use the plot helper",
          call. = FALSE)
   }
+
+  # Whether or not we attached ggplot2 and hence need to detach it at the end
+  ggdetach <- FALSE
+
+  # Use default code if none was given
+  if (missing(code) || trimws(code) == "") {
+    code <- "ggplot(iris, aes(Sepal.Length, Petal.Length)) +
+      geom_point(aes(col = Species)) +
+      scale_colour_manual(values = CPCOLS)"
+
+    # Load ggplot2 if it isn't attached
+    if (!"ggplot2" %in% .packages()) {
+      ggdetach <- TRUE
+      code <- paste0("library(ggplot2)\n\n", code)
+    }
+    if (missing(colours)) {
+      colours <- 3
+    }
+  }
+  # If code was given, parse it and save it
+  else {
+    if (!is.character(code)) {
+      code <- paste(deparse(substitute(code)), collapse = " ")
+    }
+
+    # If the user selected the code that was inserted from the addin, remove the
+    # CPCOLS first line
+    code <- sub("^(\\s*CPCOLS <-.*\n\n)", code, replacement = "", perl = TRUE)
+
+    # If no colours were given, try to guess how many colours are needed by
+    # building a ggplot2 plot and seeing if an error about missing colours is
+    # thrown
+    if (missing(colours)) {
+      colours <- "white"
+      tempcode <- paste0("CPCOLS <- colours;", code)
+      tryCatch({
+        p <- eval(parse(text = tempcode))
+        if (ggplot2::is.ggplot(p)) {
+          ggplot2::ggplot_build(p)
+        }
+        colours <- 1
+      }, error = function(err) {
+        mainEnv <- parent.env(environment())
+        regex <- "Insufficient values in manual scale\\. ([0-9]+) needed.*"
+        if (grepl(regex, err$message)) {
+          assign("colours", as.numeric(sub(regex, "\\1", err$message)),
+                 envir = mainEnv)
+        }
+      })
+    }
+  }
+
+  # If a number of colours was specified, give them default colours
+  if (is.numeric(colours)) {
+    palette <- c("#1f78b4","#33a02c","#e31a1c","#ff7f00","#6a3d9a","#b15928",
+                 "#a6cee3","#b2df8a","#fb9a99","#fdbf6f","#cab2d6","#ffff99")
+    colours <- rep_len(palette, colours)
+  }
+  colours <- formatHEX(colours)
 
   resourcePath <- system.file("gadgets", "colourpicker",
                               package = "colourpicker")
@@ -41,14 +120,30 @@ colourPickerGadget <- function(numCols = 3) {
     shinyjs::useShinyjs(),
     shinyjs::extendShinyjs(
       script = file.path(resourcePath, "js", "shinyjs-funcs.js"),
-      functions = c()
+      functions = c("closeWindow")
     ),
-    tags$head(includeCSS(file.path(resourcePath, "css", "app.css"))),
+    tags$head(
+      includeCSS(file.path(resourcePath, "css", "app.css")),
+      includeCSS(file.path(resourcePath, "css", "plotHelper.css"))
+    ),
 
-    gadgetTitleBar(
-      span(strong("Colour Picker"),
-           span(id = "author", "By",
-                a(href = "http://deanattali.com", "Dean Attali")))
+    gadgetTitleBar(span(strong("Plot Colour Helper"),
+                        span(id = "author", "By",
+                             a(href = "http://deanattali.com", "Dean Attali")))
+    ),
+
+    div(id = "plotArea",
+        shinyjs::hidden(
+          div(id = "plotErrorOut",
+            strong("Error with the plot:"),
+            textOutput("plotError")
+          )
+        ),
+        div(id = "plot-container",
+            tags$img(src = file.path("cpg", "img", "ajax-loader.gif"),
+                     id = "plot-spinner"),
+            plotOutput("plot", width = "100%")
+        )
     ),
 
     # Header section - shows the selected colours
@@ -56,7 +151,7 @@ colourPickerGadget <- function(numCols = 3) {
       id = "header-section",
       div(
         id = "header-title",
-        "Selected colours"
+        "Selected colours - Use", tags$code("CPCOLS"), "to access this list"
       ),
       div(
         id = "selected-cols-row",
@@ -80,6 +175,20 @@ colourPickerGadget <- function(numCols = 3) {
 
     miniTabstripPanel(
 
+      miniTabPanel(
+        "Plot code",
+        icon = icon("code"),
+        miniContentPanel(
+          div(
+            id = "codeArea",
+            strong("R code for a plot"), br(),
+            "Use the variable", tags$code("CPCOLS"), "to refer to the",
+            "list of selected colours.",
+            textAreaInput("code", NULL, code, rows = 15)
+          )
+        )
+      ),
+
       # Tab 1 - choose any colour
       miniTabPanel(
         "Any colour",
@@ -88,9 +197,7 @@ colourPickerGadget <- function(numCols = 3) {
           div(
             id = "anycolarea",
             br(),
-            colourpicker::colourInput(
-              "anyColInput", "Select any colour", showColour = "both",
-              value = "white")
+            uiOutput("anyColInputPlaceholder")
           )
         )
       ),
@@ -138,14 +245,36 @@ colourPickerGadget <- function(numCols = 3) {
   )
 
   server <- function(input, output, session) {
+
+    # If we attached ggplot2, detach it
+    session$onSessionEnded(function() {
+      if (ggdetach) {
+        detach("package:ggplot2", unload = TRUE)
+      }
+      stopApp()
+    })
+
     values <- reactiveValues(
-      selectedCols = rep("#FFFFFF", numCols),
+      selectedCols = colours,
       selectedNum = 1,
-      colUpdateSrc = 0
+      colUpdateSrc = 0,
+      plotError = NULL
     )
+
+    # Initialize the main colour picker to the first colour in the list
+    output$anyColInputPlaceholder <- renderUI({
+      colourpicker::colourInput(
+        "anyColInput", "Select any colour", colours[1], showColour = "both")
+    })
+    outputOptions(output, "anyColInputPlaceholder", suspendWhenHidden = FALSE)
+
+    cpcols <- reactive({
+      values$selectedCols
+    })
 
     # User canceled
     observeEvent(input$cancel, {
+      shinyjs::js$closeWindow()
       stopApp(stop("User canceled colour selection", call. = FALSE))
     })
 
@@ -165,7 +294,22 @@ colourPickerGadget <- function(numCols = 3) {
         cols <- unlist(cols)
       }
 
-      stopApp(cols)
+      globalenv <- .GlobalEnv
+      assign("CPCOLS", cols, envir = globalenv)
+      shinyjs::js$closeWindow()
+
+      # If this was called as a gadget, return the colours as a vector
+      if (!returnCode) {
+        stopApp(cols)
+      }
+      # If this was called as an addin, return the code with the colours in it
+      else {
+        code <- paste0(
+          "CPCOLS <- ", paste(utils::capture.output(dput(cols)), collapse = ""),
+          "\n\n", input$code
+        )
+        stopApp(code)
+      }
     })
 
     # Add another colour to select
@@ -307,6 +451,30 @@ colourPickerGadget <- function(numCols = 3) {
       )
     })
 
+    output$plot <- renderPlot({
+      tryCatch({
+        shinyjs::hide('plotErrorOut')
+        code <- input$code
+        code <- paste0("CPCOLS <- cpcols();", code)
+        p <- eval(parse(text = code))
+
+        # If it's a ggplot2 plot, we need to explicitly print it to see if there
+        # are errors
+        if (ggplot2::is.ggplot(p)) {
+          print(p)
+        } else {
+          p
+        }
+      }, error = function(err) {
+        values$plotError <- err$message
+        shinyjs::show('plotErrorOut')
+      })
+    })
+
+    output$plotError <- renderText({
+      values$plotError
+    })
+
     # Show the keyboard shortcuts
     observeEvent(input$showShortcuts, {
       # If it's an old shiny version that doesn't support modals, use an alert
@@ -389,7 +557,17 @@ colourPickerGadget <- function(numCols = 3) {
     })
   }
 
-  viewer <- shiny::dialogViewer("Colour Picker", width = 800, height = 700)
-  shiny::runGadget(shiny::shinyApp(ui, server), viewer = viewer,
-                   stopOnCancel = FALSE)
+  shiny::runGadget(shiny::shinyApp(ui, server),
+                   viewer = shiny::browserViewer(), stopOnCancel = FALSE)
+}
+
+plotHelperAddin <- function() {
+  context <- rstudioapi::getActiveDocumentContext()
+  text <- context$selection[[1]]$text
+
+  code <- plotHelper(text, returnCode = TRUE)
+  if (is.null(code)) {
+    return()
+  }
+  rstudioapi::insertText(text = code, id = context$id)
 }

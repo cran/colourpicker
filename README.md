@@ -1,5 +1,5 @@
-colourpicker - A Colour Picker Widget for Shiny Apps, RStudio, R-markdown, and 'htmlwidgets'
-============================================================================================
+colourpicker - A Colour Picker Tool for Shiny and for Selecting Colours in Plots
+================================================================================
 
 [![Build
 status](https://travis-ci.org/daattali/colourpicker.svg?branch=master)](https://travis-ci.org/daattali/colourpicker)
@@ -10,19 +10,40 @@ version](http://www.r-pkg.org/badges/version/colourpicker)](https://cran.r-proje
 > the MIT license.*
 
 `colourpicker` gives you a colour picker widget that can be used in
-different contexts in R. Most of the functionality here is taken from
-straight from [`shinyjs`](https://github.com/daattali/shinyjs) in order
-to make the colour picker a standalone package.
+different contexts in R.
 
-Demo
-----
+The most common uses of `colourpicker` are to use the `colourInput()`
+function to create a colour input, or to use the `plotHelper()`
+function/RStudio Addin to easily select colours to use in a plot.
 
-[Click here](http://daattali.com/shiny/colourInput/) to view a live
-interactive demo of `colourpicker`.
+Table of contents
+=================
 
+-   [Demos](#demos)
+-   [Installation](#install)
+-   [Colour input for Shiny apps (or R markdown):
+    `colourInput()`](#colourinput)
+-   [Select colours to use in your plot: `plotHelper()`](#plothelper)
+-   [Select colours to use in your R code:
+    `colourPicker()`](#colourpicker)
+-   [Features of `colourInput()`](#colourinput-features)
+-   [Features of `plotHelper()`](#plothelper-features)
+
+<h2 id="demos">
+Demos
+</h2>
+As mentioned above, the most useful functions are `colourInput()` and
+`plotHelper()`.
+
+-   [Click here](http://daattali.com/shiny/colourInput/) to view a live
+    interactive demo the colour input.
+-   The GIF below shows what the Plot Colour Helper looks like.
+
+![Plot Colour Helper demo](inst/img/plothelper-demo.gif)
+
+<h2 id="install">
 Installation
-------------
-
+</h2>
 `colourpicker` is available through both CRAN and GitHub:
 
 To install the stable CRAN version:
@@ -34,15 +55,9 @@ To install the latest development version from GitHub:
     install.packages("devtools")
     devtools::install_github("daattali/colourpicker")
 
-Overview of main functions
---------------------------
-
-`colourpicker` exposes three functions: `colourInput()` (for Shiny
-apps), `colourPicker()` (RStudio addin), and `colourWidget()` (an
-htmlwidget).
-
-### In Shiny apps (or R markdown): `colourInput()`
-
+<h2 id="colourinput">
+Colour input for Shiny apps (or R markdown): `colourInput()`
+</h2>
 You can use `colourInput()` to include a colour picker input in Shiny
 apps (or in R markdown documents). It works just like any other native
 Shiny input, here is an example:
@@ -63,19 +78,33 @@ Shiny input, here is an example:
 
 ![Demo of colourInput](inst/img/colourinput.png)
 
-### To select colours to use in your R code: `colourPicker()`
+<h2 id="plothelper">
+Select colours to use in your plot: `plotHelper()`
+</h2>
+If you've ever had to spend a long time perfecting the colour scheme of
+a plot, you'd find the Plot Colour Helper handy. It's an RStudio addin
+that lets you interactively choose colours for your plot while updating
+your plot in real-time so you can see the colour changes immediately.
 
-`colourpicker` also provides an RStudio addin that can be used to easily
-select colours and save them as a variable in R. This can be useful if,
-for example, you want to pick some colours for a plot and you want an
-easy way to visualize and select a few colours. Here is a screenshot of
-the colour picker addin (you can either access this tool using the
-Addins menu or with `colourPicker()`). You can also watch a [short
-GIF](inst/img/colourPickerGadget.gif) of it an action.
+To use this tool, either highlight code for a plot and select the addin
+through the RStudio *Addins* menu, or call the `plotHelper()` function.
+The colours selected will be available as a variable named `CPCOLS`.
+
+![Demo of Plot Colour Helper](inst/img/plothelper-demo.png)
+
+<h2 id="colourpicker">
+Select colours to use in your R code: `colourPicker()`
+</h2>
+`colourpicker` also provides a more generic RStudio addin that can be
+used to select colours and save them as a variable in R. You can either
+access this tool using the *Addins* menu or with `colourPicker()`. You
+can also watch a [short GIF](inst/img/colourPickerGadget.gif) of it
+an action.
 
 ![Demo of colour picker addin](inst/img/colourpickerscrnshot.png)
 
-### As an 'htmlwidgets' widget
+Colour input as an 'htmlwidgets' widget
+---------------------------------------
 
 The colour picker input is also available as an 'htmlwidgets' widget
 using the `colourWidget()` function. This may not be terribly useful
@@ -83,9 +112,9 @@ right now since you can use the more powerful `colourInput` in Shiny
 apps and Rmarkdown documents, but it may come in handy if you need a
 widget.
 
+<h2 id="colourinput-features">
 Features of `colourInput()`
----------------------------
-
+</h2>
 ### Simple and familiar
 
 Using `colourInput` is extremely trivial if you've used Shiny, and it's
@@ -192,3 +221,109 @@ making sure the colour selection JavaScript works in most devices I
 could think of. `colourInput` will work fine in Shiny apps that are
 viewed on Android cell phones, iPhones, iPads, and even Internet
 Explorer 8+.
+
+<h2 id="plothelper-features">
+Features of `plotHelper()`
+</h2>
+### Addin vs gadget
+
+The Plot Colour Helper is available as both a gadget and an RStudio
+addin. This means that it can be invoked in one of two ways:
+
+-   Highlight code for a plot and select the addin through the *Addins*
+    menu, or
+-   Call the `plotHelper(code)` function with plot code as the
+    first parameter.
+
+There is a small difference between the two: invoking the addin via
+`plotHelper()` will merely return the final colour list as a vector,
+while using the *Addins* menu will result in the entire plot code and
+colour list getting inserted into the document.
+
+### Most important to understand: Use `CPCOLS` in your plot code
+
+The Plot Colour Helper lets you run code for a plot, and select a list
+of colours. But how does the list of colours get linked to the plot? The
+colour list is available as a variable called `CPCOLS`. This means that
+in order to refer to the colour list, you need to use that variable in
+your plot code. You can even refer to it more than once if you want to
+select colours for multiple purposes in the plot:
+
+    plotHelper(ggplot(iris, aes(Sepal.Length, Petal.Length)) +
+        geom_point(aes(col = Species)) +
+        scale_colour_manual(values = CPCOLS[1:3]) +
+        theme(panel.background = element_rect(CPCOLS[4])),
+        colours = 4)
+
+### Default plot if no code is provided
+
+To more easily access the tool, you can call `plotHelper()` with no
+parameters or select the addin without highlighting any code. In that
+case, the default code in the tool will be initialized as
+
+    ggplot(iris, aes(Sepal.Length, Petal.Length)) +
+          geom_point(aes(col = Species)) +
+          scale_colour_manual(values = CPCOLS)
+
+You can always change the plot code from within the tool.
+
+### Initial list of colours
+
+You can set the initial colour list by providing a vector of colours as
+the `colours` parameter to `plotHelper()` (eg.
+`plotHelper(colours = c("red", "#123ABC"))`).
+
+Alternatively, if you don't want to initialize to any particular set of
+colours, but you want to initialize with a specific number of colours in
+the list, you can provide an integer as the `colours` parameter (eg.
+`plotHelper(colours = 2)`).
+
+If the colour values are not provided, then a default palette of colours
+will be used for the initial colours. This palette has 12 colours, and
+if there are more than 12 colours to support then they will get
+recycled.
+
+### Plot Colour Helper tries to guess how many colours are needed
+
+If you don't provide the `colours` parameter, or if you invoke the tool
+as an addin, it will attempt to guess how many colours are needed. For
+example, using the following plot code
+
+    ggplot(mtcars, aes(wt, mpg)) +
+        geom_point(aes(col = as.factor(am))) +
+        scale_colour_manual(values = CPCOLS)
+
+will initialize the tool with 2 colours (because there are 2 `am`
+levels), while the following code
+
+    ggplot(mtcars, aes(wt, mpg)) +
+        geom_point(aes(col = as.factor(cyl))) +
+        scale_colour_manual(values = CPCOLS)
+
+will use 3 colours.
+
+### Keyboard shortcuts
+
+There are several keyboard shortcuts available, to make the selection
+process even simpler. **Spacebar** to add another colour, **Delete** to
+remove the currently selected colour, **Left**/**Right** to navigate the
+colours, and more. You can view the full list of shortcuts by clicking
+on *Show keyboard shortcuts*.
+
+### Return value of Plot Colour Helper
+
+When the tool is run as an addin, the final colour list and the code get
+inserted into the currently selected RStudio document (either the Source
+panel or the Console panel).
+
+If the tool is called with `plotHelper()`, then the return value is
+simply the vector of selected colours. You can assign it into a variable
+directly - running `cols <- plotHelper()` will assign the selected
+colours into `cols`.
+
+Since the plot code requires you to use the variable name `CPCOLS`,
+after closing the plot helper tool, a variable named `CPCOLS` will be
+available in the global environment.
+
+The colours returned can either be in HEX format (eg. "\#0000FF") or be
+named (eg. "blue") - you can choose this option inside the tool.

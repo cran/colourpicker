@@ -221,13 +221,19 @@ formatHEXsingle <- function(x) {
   if (x %in% grDevices::colors()) {
     x <- do.call(grDevices::rgb, as.list(grDevices::col2rgb(x) / 255))
   }
-  if (!grepl("^#?([[:xdigit:]]{3}|[[:xdigit:]]{6})$", x)) {
+  if (!grepl("^#?([[:xdigit:]]{3}|[[:xdigit:]]{6}|[[:xdigit:]]{8})$", x)) {
     stop(sprintf("%s is not a valid colour", x), call. = FALSE)
   }
 
   # ensure x begins with a pound sign
   if (substr(x, 1, 1) != "#") {
     x <- paste0("#", x)
+  }
+
+  # check whether it is 6-digit hex code with alpha.
+  if (nchar(x) == 9) {
+    x <- substr(x, 1, 7)
+    warning("colourpicker does not support colours with transparency. Alpha channel information dropped. (If you're skilled in JavaScript and would like to help implement transparency support for this package, please contact me daattali@gmail.com)", call. = FALSE)
   }
 
   # expand x to a 6-character HEX colour if it's in shortform
