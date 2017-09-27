@@ -21,8 +21,8 @@
 #' code to refer to the colours that you will pick. If you do not provide any
 #' code, the plot helper will initialize with sample code. The code can be
 #' provided as text or as R code.
-#' @param colours A vector of colours to use as the initial colours in the tool.
-#' If you provide an integer instead of a vector of colours, the tool will load
+#' @param colours A vector of colours to use as the initial colours in the tool,
+#' or an integer. If an integer is provided instead of colours, the tool will load
 #' with that number of colours, and default colours will be used initially.
 #' If you do not provide this parameter, the tool will attempt to guess how many
 #' colours are needed in the \code{code} and initialize that many colours.
@@ -47,7 +47,7 @@
 #'                      geom_point(aes(col = as.factor(cyl)))+
 #'                      scale_colour_manual(values = CPCOLS))
 #' }
-plotHelper <- function(code, colours, returnCode = FALSE) {
+plotHelper <- function(code = "", colours = NULL, returnCode = FALSE) {
   if (!requireNamespace("rstudioapi", quietly = TRUE)) {
     stop("You must have RStudio v0.99.878 or newer to use the plot helper",
          call. = FALSE)
@@ -57,7 +57,7 @@ plotHelper <- function(code, colours, returnCode = FALSE) {
   ggdetach <- FALSE
 
   # Use default code if none was given
-  if (missing(code) || trimws(code) == "") {
+  if (trimws(code) == "") {
     code <- "ggplot(iris, aes(Sepal.Length, Petal.Length)) +
       geom_point(aes(col = Species)) +
       scale_colour_manual(values = CPCOLS)"
@@ -67,7 +67,7 @@ plotHelper <- function(code, colours, returnCode = FALSE) {
       ggdetach <- TRUE
       code <- paste0("library(ggplot2)\n\n", code)
     }
-    if (missing(colours)) {
+    if (is.null(colours)) {
       colours <- 3
     }
   }
@@ -84,7 +84,7 @@ plotHelper <- function(code, colours, returnCode = FALSE) {
     # If no colours were given, try to guess how many colours are needed by
     # building a ggplot2 plot and seeing if an error about missing colours is
     # thrown
-    if (missing(colours)) {
+    if (is.null(colours)) {
       colours <- "white"
       tempcode <- paste0("CPCOLS <- colours;", code)
       tryCatch({
@@ -110,7 +110,6 @@ plotHelper <- function(code, colours, returnCode = FALSE) {
                  "#a6cee3","#b2df8a","#fb9a99","#fdbf6f","#cab2d6","#ffff99")
     colours <- rep_len(palette, colours)
   }
-  colours <- formatHEX(colours)
 
   resourcePath <- system.file("gadgets", "colourpicker",
                               package = "colourpicker")
@@ -264,7 +263,8 @@ plotHelper <- function(code, colours, returnCode = FALSE) {
     # Initialize the main colour picker to the first colour in the list
     output$anyColInputPlaceholder <- renderUI({
       colourpicker::colourInput(
-        "anyColInput", "Select any colour", colours[1], showColour = "both")
+        "anyColInput", "Select any colour", colours[1], showColour = "both",
+        allowTransparent = TRUE)
     })
     outputOptions(output, "anyColInputPlaceholder", suspendWhenHidden = FALSE)
 
@@ -332,19 +332,22 @@ plotHelper <- function(code, colours, returnCode = FALSE) {
     # Render the chosen colours
     output$selectedCols <- renderUI({
       lapply(seq_along(values$selectedCols), function(colNum) {
+        cls <- "col col-transparent-box"
         if (colNum == values$selectedNum) {
-          cls <- "col selected"
-        } else {
-          cls <- "col"
+          cls <- paste0(cls, " selected")
         }
         if (isColDark(values$selectedCols[colNum])) {
           cls <- paste0(cls, " col-dark")
         }
         div(
-          style = paste0("background:", values$selectedCols[colNum]),
-          `data-colnum` = colNum,
           class = cls,
-          colNum
+          div(
+            style = paste0("background:",
+                           hex2rgba_str(values$selectedCols[colNum])),
+            class = "selected-col-inner",
+            `data-colnum` = colNum,
+            colNum
+          )
         )
       })
     })

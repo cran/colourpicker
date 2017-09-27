@@ -5,7 +5,8 @@
 \title{Create a colour picker htmlwidget}
 \usage{
 colourWidget(value = "white", showColour = c("both", "text", "background"),
-  palette = c("square", "limited"), allowedCols, width = "300px",
+  palette = c("square", "limited"), allowedCols = NULL,
+  allowTransparent = FALSE, returnName = FALSE, width = "300px",
   height = "35px", elementId = NULL)
 }
 \arguments{
@@ -22,6 +23,13 @@ predefined list of colours to choose from.}
 \item{allowedCols}{A list of colours that the user can choose from. Only
 applicable when \code{palette == "limited"}. The \code{limited} palette
 uses a default list of 40 colours if \code{allowedCols} is not defined.}
+
+\item{allowTransparent}{If \code{TRUE}, enables a slider to choose an alpha
+(transparency) value for the colour. When a colour with opacity is
+chosen, the return value is an 8-digit HEX code.}
+
+\item{returnName}{If \code{TRUE}, then return the name of an R colour instead
+of a HEX value when possible.}
 
 \item{width}{Custom width for the input field.}
 
@@ -41,4 +49,3 @@ colourWidget()
 colourWidget("red", palette = "limited", allowedCols = c("yellow", "red", "#123ABC"))
 
 }
-

@@ -6,7 +6,7 @@
 \usage{
 updateColourInput(session, inputId, label = NULL, value = NULL,
   showColour = NULL, palette = NULL, allowedCols = NULL,
-  allowTransparent = NULL, transparentText = NULL, returnName = NULL)
+  allowTransparent = NULL, returnName = NULL)
 }
 \arguments{
 \item{session}{The \code{session} object passed to function given to \code{shinyServer}.}
@@ -17,18 +17,21 @@ updateColourInput(session, inputId, label = NULL, value = NULL,
 
 \item{value}{The value to set for the input object.}
 
-\item{showColour}{Whether to shoW the chosen colour via text, background, or both.}
+\item{showColour}{Whether to show the chosen colour as text inside the input,
+as the background colour of the input, or both (default).}
 
 \item{palette}{The type of colour palette to allow the user to select colours
-from.}
+from. \code{square} (default) shows a square colour palette that allows the
+user to choose any colour, while \code{limited} only gives the user a
+predefined list of colours to choose from.}
 
-\item{allowedCols}{A list of colours that the user can choose from.}
+\item{allowedCols}{A list of colours that the user can choose from. Only
+applicable when \code{palette == "limited"}. The \code{limited} palette
+uses a default list of 40 colours if \code{allowedCols} is not defined.}
 
-\item{allowTransparent}{If \code{TRUE}, then add a checkbox that allows the
-user to select the \code{transparent} colour.}
-
-\item{transparentText}{The text to show beside the transparency checkbox
-when \code{allowTransparent} is \code{TRUE}}
+\item{allowTransparent}{If \code{TRUE}, enables a slider to choose an alpha
+(transparency) value for the colour. When a colour with opacity is
+chosen, the return value is an 8-digit HEX code.}
 
 \item{returnName}{If \code{TRUE}, then return the name of an R colour instead
 of a HEX value when possible.}
@@ -76,4 +79,3 @@ if (interactive()) {
 \seealso{
 \code{\link[colourpicker]{colourInput}}
 }
-
