@@ -27,12 +27,16 @@
 #' predefined list of colours to choose from.
 #' @param allowedCols A list of colours that the user can choose from. Only
 #' applicable when \code{palette == "limited"}. The \code{limited} palette
-#' uses a default list of 40 colours if \code{allowedCols} is not defined.
+#' uses a default list of 40 colours if \code{allowedCols} is not defined. If
+#' the colour specified in \code{value} is not in the list, the default colour
+#' will revert to black.
 #' @param allowTransparent If \code{TRUE}, enables a slider to choose an alpha
 #' (transparency) value for the colour. When a colour with opacity is
 #' chosen, the return value is an 8-digit HEX code.
 #' @param returnName If \code{TRUE}, then return the name of an R colour instead
 #' of a HEX value when possible.
+#' @param closeOnClick If \code{TRUE}, then the colour selection panel will close
+#' immediately after selecting a colour.
 #' @seealso \code{\link[colourpicker]{updateColourInput}}
 #' \code{\link[colourpicker]{colourPicker}}
 #' @examples
@@ -79,17 +83,19 @@
 #'     }
 #'   )
 #' }
-#' @note See \href{http://daattali.com/shiny/colourInput/}{http://daattali.com/shiny/colourInput/}
+#' @note See \href{https://daattali.com/shiny/colourInput/}{https://daattali.com/shiny/colourInput/}
 #' for a live demo.
 #' @export
 colourInput <- function(inputId, label, value = "white",
                         showColour = c("both", "text", "background"),
                         palette = c("square", "limited"),
                         allowedCols = NULL, allowTransparent = FALSE,
-                        returnName = FALSE) {
+                        returnName = FALSE, closeOnClick = FALSE) {
   # sanitize the arguments
   showColour <- match.arg(showColour)
   palette <- match.arg(palette)
+
+  value <- restoreInput(id = inputId, default = value)
 
   # declare dependencies
   shiny::addResourcePath("colourpicker-binding",
@@ -131,6 +137,11 @@ colourInput <- function(inputId, label, value = "white",
     inputTag <- shiny::tagAppendAttributes(
       inputTag,
       `data-allow-alpha` = "true")
+  }
+  if (closeOnClick) {
+    inputTag <- shiny::tagAppendAttributes(
+      inputTag,
+      `data-close-on-click` = "true")
   }
 
   inputTag <-
@@ -185,20 +196,21 @@ colourInput <- function(inputId, label, value = "white",
 #'     }
 #'   )
 #' }
-#' @note See \href{http://daattali.com/shiny/colourInput/}{http://daattali.com/shiny/colourInput/}
+#' @note See \href{https://daattali.com/shiny/colourInput/}{https://daattali.com/shiny/colourInput/}
 #' for a live demo.
 #' @export
 updateColourInput <- function(session, inputId, label = NULL, value = NULL,
                               showColour = NULL, palette = NULL, allowedCols = NULL,
                               allowTransparent = NULL,
-                              returnName = NULL) {
+                              returnName = NULL, closeOnClick = NULL) {
   message <- dropNulls(list(
     label = label, value = value,
     showColour = showColour,
     palette = palette,
     allowedCols = allowedCols,
     allowAlpha = allowTransparent,
-    returnName = returnName
+    returnName = returnName,
+    closeOnClick = closeOnClick
   ))
   session$sendInputMessage(inputId, message)
 }
@@ -210,8 +222,8 @@ dropNulls <- function(x) {
 
 # copied from shiny since it's not exported
 `%AND%` <- function(x, y) {
-  if (!is.null(x) && !is.na(x))
-    if (!is.null(y) && !is.na(y))
+  if (!is.null(x) && !isTRUE(is.na(x)))
+    if (!is.null(y) && !isTRUE(is.na(y)))
       return(y)
   return(NULL)
 }
