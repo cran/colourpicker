@@ -2,10 +2,12 @@ Package: colourpicker
 Type: Package
 Title: A Colour Picker Tool for Shiny and for Selecting Colours in
         Plots
-Version: 1.1.0
+Version: 1.1.1
 Authors@R: c(
-    person("Dean", "Attali", email = "daattali@gmail.com",
-    role = c("aut", "cre")),
+    person("Dean", "Attali", 
+        email = "daattali@gmail.com",
+        role = c("aut", "cre"),
+        comment= c(ORCID="0000-0002-5645-3493")),
     person("David", "Griswold", email="novachild@gmail.com",
     role = "ctb")
   )
@@ -24,13 +26,11 @@ Suggests: knitr (>= 1.7), rmarkdown, rstudioapi (>= 0.5),
         shinydisconnect
 License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
-VignetteBuilder: knitr
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2020-09-14 20:42:59 UTC; Dean-X1C
-Author: Dean Attali [aut, cre],
+Packaged: 2021-10-04 06:16:20 UTC; Dean-X1C
+Author: Dean Attali [aut, cre] (<https://orcid.org/0000-0002-5645-3493>),
   David Griswold [ctb]
 Maintainer: Dean Attali <daattali@gmail.com>
 Repository: CRAN
-Date/Publication: 2020-09-14 21:20:05 UTC
+Date/Publication: 2021-10-04 06:40:02 UTC

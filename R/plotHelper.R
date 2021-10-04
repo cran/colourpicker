@@ -56,8 +56,10 @@ plotHelper <- function(code = "", colours = NULL, returnCode = FALSE) {
   # Whether or not we attached ggplot2 and hence need to detach it at the end
   ggdetach <- FALSE
 
+  addin <- (substitute(code) == ".colourpicker_addin_text")
+
   # Use default code if none was given
-  if (trimws(code) == "") {
+  if ((addin || is.character(substitute(code))) && trimws(code) == "") {
     code <- "ggplot(iris, aes(Sepal.Length, Petal.Length)) +
       geom_point(aes(col = Species)) +
       scale_colour_manual(values = CPCOLS)"
@@ -73,7 +75,7 @@ plotHelper <- function(code = "", colours = NULL, returnCode = FALSE) {
   }
   # If code was given, parse it and save it
   else {
-    if (!is.character(code)) {
+    if (!addin && !is.character(substitute(code))) {
       code <- paste(deparse(substitute(code)), collapse = " ")
     }
 
@@ -157,7 +159,7 @@ plotHelper <- function(code = "", colours = NULL, returnCode = FALSE) {
             title = "Add another colour"
         ),
         div(id = "removeColBtn",
-            icon("trash-o"),
+            icon("trash-alt"),
             title = "Remove selected colour"
         ),
         uiOutput("selectedCols", inline = TRUE)
@@ -564,9 +566,9 @@ plotHelper <- function(code = "", colours = NULL, returnCode = FALSE) {
 
 plotHelperAddin <- function() {
   context <- rstudioapi::getActiveDocumentContext()
-  text <- context$selection[[1]]$text
+  .colourpicker_addin_text <- context$selection[[1]]$text
 
-  code <- plotHelper(text, returnCode = TRUE)
+  code <- plotHelper(.colourpicker_addin_text, returnCode = TRUE)
   if (is.null(code)) {
     return()
   }
