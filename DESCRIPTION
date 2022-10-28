@@ -2,7 +2,7 @@ Package: colourpicker
 Type: Package
 Title: A Colour Picker Tool for Shiny and for Selecting Colours in
         Plots
-Version: 1.1.1
+Version: 1.2.0
 Authors@R: c(
     person("Dean", "Attali", 
         email = "daattali@gmail.com",
@@ -28,9 +28,9 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2021-10-04 06:16:20 UTC; Dean-X1C
+Packaged: 2022-10-28 04:54:54 UTC; Dean-X1C
 Author: Dean Attali [aut, cre] (<https://orcid.org/0000-0002-5645-3493>),
   David Griswold [ctb]
 Maintainer: Dean Attali <daattali@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-10-04 06:40:02 UTC
+Date/Publication: 2022-10-28 06:55:19 UTC
